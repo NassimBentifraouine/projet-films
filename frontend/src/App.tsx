@@ -1,125 +1,145 @@
-import { useEffect, useState } from "react";
-
-type HealthResponse = {
-  status: string;
-  message: string;
-};
+import { Link, NavLink, Route, Routes } from "react-router-dom";
+import { HomePage } from "./pages/HomePage";
+import { MoviesPage } from "./pages/MoviesPage";
+import { MovieDetailPage } from "./pages/MovieDetailPage";
+import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { AdminDashboardPage } from "./pages/AdminDashboardPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 
 function App() {
-  const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const apiBaseUrl =
-      import.meta.env.VITE_API_URL || "http://localhost:4000/api";
-
-    const fetchHealth = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const response = await fetch(`${apiBaseUrl}/health`);
-
-        if (!response.ok) {
-          throw new Error(`Erreur HTTP ${response.status}`);
-        }
-
-        const data: HealthResponse = await response.json();
-        setHealth(data);
-      } catch (err: unknown) {
-        console.error("Erreur lors de l'appel à /api/health", err);
-        setError("Impossible de joindre l'API backend.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHealth();
-  }, []);
-
   return (
     <div
       style={{
         minHeight: "100vh",
         margin: 0,
-        padding: "2rem",
-        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         background: "#0f172a",
         color: "#e5e7eb",
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
+        flexDirection: "column"
       }}
     >
-      <div
+      {/* BARRE DE NAVIGATION */}
+      <header
         style={{
-          maxWidth: "480px",
-          width: "100%",
-          padding: "2rem",
-          borderRadius: "1rem",
-          background: "#020617",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
-          border: "1px solid rgba(148,163,184,0.3)"
+          borderBottom: "1px solid rgba(148,163,184,0.3)",
+          background: "#020617"
         }}
       >
-        <h1
+        <div
           style={{
-            fontSize: "1.8rem",
-            fontWeight: 700,
-            marginBottom: "0.75rem"
+            maxWidth: "960px",
+            margin: "0 auto",
+            padding: "0.75rem 1.5rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem"
           }}
         >
-          🎬 Projet Films – Frontend
-        </h1>
-        <p style={{ marginBottom: "1.5rem", color: "#9ca3af" }}>
-          Cette page vérifie la connexion entre le frontend React et l&apos;API
-          backend.
-        </p>
-
-        {loading && <p>⏳ Vérification de l&apos;API en cours...</p>}
-
-        {!loading && error && (
-          <div
+          <Link
+            to="/"
             style={{
-              padding: "0.75rem 1rem",
-              borderRadius: "0.5rem",
-              background: "rgba(239,68,68,0.1)",
-              border: "1px solid rgba(239,68,68,0.6)",
-              color: "#fecaca"
+              textDecoration: "none",
+              color: "#e5e7eb",
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem"
             }}
           >
-            <strong>Erreur :</strong> {error}
-          </div>
-        )}
+            <span>🎬</span>
+            <span>Films App</span>
+          </Link>
 
-        {!loading && !error && health && (
-          <div
+          <nav
             style={{
-              padding: "0.75rem 1rem",
-              borderRadius: "0.5rem",
-              background: "rgba(34,197,94,0.1)",
-              border: "1px solid rgba(34,197,94,0.6)",
-              color: "#bbf7d0"
+              display: "flex",
+              alignItems: "center",
+              gap: "1rem",
+              fontSize: "0.95rem"
             }}
           >
-            <p style={{ margin: 0 }}>
-              <strong>Statut :</strong> {health.status}
-            </p>
-            <p style={{ margin: "0.25rem 0 0 0" }}>
-              <strong>Message :</strong> {health.message}
-            </p>
-          </div>
-        )}
+            <NavItem to="/">Accueil</NavItem>
+            <NavItem to="/movies">Catalogue</NavItem>
+            <NavItem to="/profile">Profil</NavItem>
+            <NavItem to="/admin">Admin</NavItem>
+            <NavItem to="/login">Connexion</NavItem>
+            <NavItem to="/register">Inscription</NavItem>
+          </nav>
+        </div>
+      </header>
 
-        <p style={{ marginTop: "1.5rem", fontSize: "0.85rem", color: "#6b7280" }}>
-          Backend attendu sur :{" "}
-          <code style={{ fontFamily: "monospace" }}>
-            {import.meta.env.VITE_API_URL || "http://localhost:4000/api"}
-          </code>
-        </p>
-      </div>
+      {/* CONTENU CENTRAL */}
+      <main
+        style={{
+          flex: 1,
+          display: "flex",
+          justifyContent: "center",
+          padding: "2rem 1.5rem"
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "960px",
+            background: "#020617",
+            borderRadius: "1rem",
+            padding: "2rem",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
+            border: "1px solid rgba(148,163,184,0.3)"
+          }}
+        >
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/movies" element={<MoviesPage />} />
+            <Route path="/movies/:id" element={<MovieDetailPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </div>
+      </main>
+
+      {/* PIED DE PAGE */}
+      <footer
+        style={{
+          padding: "0.75rem 1.5rem",
+          textAlign: "center",
+          fontSize: "0.8rem",
+          color: "#6b7280"
+        }}
+      >
+        Projet scolaire – Catalogue de films · React &amp; Node.js
+      </footer>
     </div>
+  );
+}
+
+type NavItemProps = {
+  to: string;
+  children: React.ReactNode;
+};
+
+function NavItem({ to, children }: NavItemProps) {
+  return (
+    <NavLink
+      to={to}
+      style={({ isActive }) => ({
+        textDecoration: "none",
+        color: isActive ? "#fbbf24" : "#e5e7eb",
+        fontWeight: isActive ? 600 : 400,
+        borderBottom: isActive ? "2px solid #fbbf24" : "2px solid transparent",
+        paddingBottom: "0.15rem"
+      })}
+    >
+      {children}
+    </NavLink>
   );
 }
 

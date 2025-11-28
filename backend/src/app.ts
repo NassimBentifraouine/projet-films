@@ -4,6 +4,7 @@ import healthRouter from "./routes/health.routes";
 import moviesRouter from "./routes/movies.routes";
 import authRouter from "./routes/auth.routes";
 import watchlistRouter from "./routes/watchlist.routes";
+import ratingsRouter from "./routes/ratings.routes";
 
 const app: Application = express();
 
@@ -24,6 +25,7 @@ app.use(API_PREFIX, authRouter);
 
 app.use(API_PREFIX, watchlistRouter);
 
+app.use(API_PREFIX, ratingsRouter);
 app.use(API_PREFIX, moviesRouter);
 
 export default app;

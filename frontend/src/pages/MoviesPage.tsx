@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 type Movie = {
@@ -60,6 +61,7 @@ export function MoviesPage() {
     null
   );
 
+  // Catégories disponibles (dérivées des films affichés)
   const availableCategories = useMemo(() => {
     const set = new Set<string>();
     movies.forEach((movie) => {
@@ -189,7 +191,6 @@ export function MoviesPage() {
         throw new Error(message);
       }
 
-      // On met à jour la liste locale
       if (inWatchlist) {
         setWatchlistIds((prev) => prev.filter((id) => id !== movieId));
       } else {
@@ -431,65 +432,70 @@ export function MoviesPage() {
                     flexDirection: "column"
                   }}
                 >
-                  <div
-                    style={{
-                      position: "relative",
-                      paddingTop: "150%",
-                      overflow: "hidden"
-                    }}
+                  <Link
+                    to={`/movies/${movie.id}`}
+                    style={{ color: "inherit", textDecoration: "none" }}
                   >
-                    <img
-                      src={movie.posterUrl}
-                      alt={`Affiche du film ${movie.title}`}
+                    <div
                       style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover"
-                      }}
-                    />
-                  </div>
-                  <div style={{ padding: "0.75rem 0.85rem", flex: 1 }}>
-                    <h2
-                      style={{
-                        fontSize: "1rem",
-                        margin: "0 0 0.25rem 0"
+                        position: "relative",
+                        paddingTop: "150%",
+                        overflow: "hidden"
                       }}
                     >
-                      {movie.title}
-                    </h2>
-                    <p
-                      style={{
-                        margin: "0 0 0.5rem 0",
-                        fontSize: "0.85rem",
-                        color: "#9ca3af"
-                      }}
-                    >
-                      {movie.synopsis.length > 120
-                        ? movie.synopsis.slice(0, 120) + "..."
-                        : movie.synopsis}
-                    </p>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: "0.85rem",
-                        color: "#e5e7eb"
-                      }}
-                    >
-                      ⭐ {movie.rating.toFixed(1)} · {movie.durationMinutes} min
-                    </p>
-                    <p
-                      style={{
-                        margin: "0.25rem 0 0 0",
-                        fontSize: "0.8rem",
-                        color: "#9ca3af"
-                      }}
-                    >
-                      {movie.categories.join(" · ")}
-                    </p>
-                  </div>
+                      <img
+                        src={movie.posterUrl}
+                        alt={`Affiche du film ${movie.title}`}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover"
+                        }}
+                      />
+                    </div>
+                    <div style={{ padding: "0.75rem 0.85rem", flex: 1 }}>
+                      <h2
+                        style={{
+                          fontSize: "1rem",
+                          margin: "0 0 0.25rem 0"
+                        }}
+                      >
+                        {movie.title}
+                      </h2>
+                      <p
+                        style={{
+                          margin: "0 0 0.5rem 0",
+                          fontSize: "0.85rem",
+                          color: "#9ca3af"
+                        }}
+                      >
+                        {movie.synopsis.length > 120
+                          ? movie.synopsis.slice(0, 120) + "..."
+                          : movie.synopsis}
+                      </p>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: "0.85rem",
+                          color: "#e5e7eb"
+                        }}
+                      >
+                        ⭐ {movie.rating.toFixed(1)} · {movie.durationMinutes} min
+                      </p>
+                      <p
+                        style={{
+                          margin: "0.25rem 0 0 0",
+                          fontSize: "0.8rem",
+                          color: "#9ca3af"
+                        }}
+                      >
+                        {movie.categories.join(" · ")}
+                      </p>
+                    </div>
+                  </Link>
 
                   {user && (
                     <div

@@ -10,6 +10,7 @@ export const users: User[] = [
     email: "admin@example.com",
     passwordHash: adminPassword,
     role: "admin",
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    watchlist: []
   }
 ];

@@ -16,6 +16,7 @@ type PublicUser = {
   email: string;
   role: UserRole;
   createdAt: string;
+  watchlistCount: number;
 };
 
 const toPublicUser = (user: User): PublicUser => ({
@@ -23,7 +24,8 @@ const toPublicUser = (user: User): PublicUser => ({
   name: user.name,
   email: user.email,
   role: user.role,
-  createdAt: user.createdAt
+  createdAt: user.createdAt,
+  watchlistCount: user.watchlist.length
 });
 
 const isValidEmail = (email: string): boolean => {
@@ -95,7 +97,8 @@ export const register = (req: Request, res: Response): void => {
     email: email.toLowerCase(),
     passwordHash,
     role: "user",
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    watchlist: []
   };
 
   users.push(newUser);

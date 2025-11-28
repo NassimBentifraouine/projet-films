@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
 type Movie = {
   id: string;
@@ -27,11 +28,18 @@ type MoviesResponse = {
   };
 };
 
+type WatchlistResponse = {
+  movies: Movie[];
+  count: number;
+};
+
 const DEFAULT_LIMIT = 6;
 
 export function MoviesPage() {
   const apiBaseUrl =
     import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+
+  const { user, token } = useAuth();
 
   const [movies, setMovies] = useState<Movie[]>([]);
   const [page, setPage] = useState<number>(1);
@@ -46,7 +54,12 @@ export function MoviesPage() {
   const [sortBy, setSortBy] = useState<string>("rating");
   const [sortOrder, setSortOrder] = useState<string>("desc");
 
-  // Pour la liste des catégories, on la déduit des films de la page courante
+  // Watchlist
+  const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
+  const [updatingWatchlistId, setUpdatingWatchlistId] = useState<string | null>(
+    null
+  );
+
   const availableCategories = useMemo(() => {
     const set = new Set<string>();
     movies.forEach((movie) => {
@@ -55,6 +68,7 @@ export function MoviesPage() {
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [movies]);
 
+  // Charger les films
   useEffect(() => {
     const fetchMovies = async () => {
       try {
@@ -102,6 +116,35 @@ export function MoviesPage() {
     fetchMovies();
   }, [apiBaseUrl, page, selectedCategory, minRating, sortBy, sortOrder]);
 
+  // Charger la watchlist si l'utilisateur est connecté
+  useEffect(() => {
+    const fetchWatchlist = async () => {
+      if (!token) {
+        setWatchlistIds([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/me/watchlist`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error("Erreur lors du chargement de la watchlist.");
+        }
+
+        const data: WatchlistResponse = await response.json();
+        setWatchlistIds(data.movies.map((m) => m.id));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchWatchlist();
+  }, [apiBaseUrl, token]);
+
   const handleResetFilters = () => {
     setSelectedCategory("");
     setMinRating(0);
@@ -113,6 +156,54 @@ export function MoviesPage() {
   const handleChangePage = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
+    }
+  };
+
+  const isInWatchlist = (movieId: string): boolean => {
+    return watchlistIds.includes(movieId);
+  };
+
+  const toggleWatchlist = async (movieId: string) => {
+    if (!token) {
+      alert("Tu dois être connecté pour gérer ta watchlist.");
+      return;
+    }
+
+    setUpdatingWatchlistId(movieId);
+
+    try {
+      const inWatchlist = isInWatchlist(movieId);
+      const method = inWatchlist ? "DELETE" : "POST";
+
+      const response = await fetch(`${apiBaseUrl}/me/watchlist/${movieId}`, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const message = data.error || "Erreur lors de la mise à jour.";
+        throw new Error(message);
+      }
+
+      // On met à jour la liste locale
+      if (inWatchlist) {
+        setWatchlistIds((prev) => prev.filter((id) => id !== movieId));
+      } else {
+        setWatchlistIds((prev) => [...prev, movieId]);
+      }
+    } catch (err) {
+      console.error(err);
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Erreur lors de la mise à jour de la watchlist."
+      );
+    } finally {
+      setUpdatingWatchlistId(null);
     }
   };
 
@@ -324,79 +415,118 @@ export function MoviesPage() {
               marginBottom: "1.5rem"
             }}
           >
-            {movies.map((movie) => (
-              <article
-                key={movie.id}
-                style={{
-                  borderRadius: "0.75rem",
-                  overflow: "hidden",
-                  border: "1px solid rgba(148,163,184,0.4)",
-                  background: "#020617",
-                  display: "flex",
-                  flexDirection: "column"
-                }}
-              >
-                <div
+            {movies.map((movie) => {
+              const inWatchlist = isInWatchlist(movie.id);
+              const isUpdating = updatingWatchlistId === movie.id;
+
+              return (
+                <article
+                  key={movie.id}
                   style={{
-                    position: "relative",
-                    paddingTop: "150%",
-                    overflow: "hidden"
+                    borderRadius: "0.75rem",
+                    overflow: "hidden",
+                    border: "1px solid rgba(148,163,184,0.4)",
+                    background: "#020617",
+                    display: "flex",
+                    flexDirection: "column"
                   }}
                 >
-                  <img
-                    src={movie.posterUrl}
-                    alt={`Affiche du film ${movie.title}`}
+                  <div
                     style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover"
-                    }}
-                  />
-                </div>
-                <div style={{ padding: "0.75rem 0.85rem", flex: 1 }}>
-                  <h2
-                    style={{
-                      fontSize: "1rem",
-                      margin: "0 0 0.25rem 0"
+                      position: "relative",
+                      paddingTop: "150%",
+                      overflow: "hidden"
                     }}
                   >
-                    {movie.title}
-                  </h2>
-                  <p
-                    style={{
-                      margin: "0 0 0.5rem 0",
-                      fontSize: "0.85rem",
-                      color: "#9ca3af"
-                    }}
-                  >
-                    {movie.synopsis.length > 120
-                      ? movie.synopsis.slice(0, 120) + "..."
-                      : movie.synopsis}
-                  </p>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "0.85rem",
-                      color: "#e5e7eb"
-                    }}
-                  >
-                    ⭐ {movie.rating.toFixed(1)} · {movie.durationMinutes} min
-                  </p>
-                  <p
-                    style={{
-                      margin: "0.25rem 0 0 0",
-                      fontSize: "0.8rem",
-                      color: "#9ca3af"
-                    }}
-                  >
-                    {movie.categories.join(" · ")}
-                  </p>
-                </div>
-              </article>
-            ))}
+                    <img
+                      src={movie.posterUrl}
+                      alt={`Affiche du film ${movie.title}`}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover"
+                      }}
+                    />
+                  </div>
+                  <div style={{ padding: "0.75rem 0.85rem", flex: 1 }}>
+                    <h2
+                      style={{
+                        fontSize: "1rem",
+                        margin: "0 0 0.25rem 0"
+                      }}
+                    >
+                      {movie.title}
+                    </h2>
+                    <p
+                      style={{
+                        margin: "0 0 0.5rem 0",
+                        fontSize: "0.85rem",
+                        color: "#9ca3af"
+                      }}
+                    >
+                      {movie.synopsis.length > 120
+                        ? movie.synopsis.slice(0, 120) + "..."
+                        : movie.synopsis}
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "0.85rem",
+                        color: "#e5e7eb"
+                      }}
+                    >
+                      ⭐ {movie.rating.toFixed(1)} · {movie.durationMinutes} min
+                    </p>
+                    <p
+                      style={{
+                        margin: "0.25rem 0 0 0",
+                        fontSize: "0.8rem",
+                        color: "#9ca3af"
+                      }}
+                    >
+                      {movie.categories.join(" · ")}
+                    </p>
+                  </div>
+
+                  {user && (
+                    <div
+                      style={{
+                        padding: "0.6rem 0.85rem",
+                        borderTop: "1px solid rgba(148,163,184,0.4)",
+                        display: "flex",
+                        justifyContent: "flex-end"
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleWatchlist(movie.id)}
+                        disabled={isUpdating}
+                        style={{
+                          padding: "0.35rem 0.7rem",
+                          borderRadius: "999px",
+                          border: "1px solid rgba(248,250,252,0.2)",
+                          background: inWatchlist
+                            ? "rgba(34,197,94,0.2)"
+                            : "transparent",
+                          color: inWatchlist ? "#bbf7d0" : "#e5e7eb",
+                          fontSize: "0.8rem",
+                          cursor: isUpdating ? "not-allowed" : "pointer"
+                        }}
+                      >
+                        {isUpdating
+                          ? "Mise à jour..."
+                          : inWatchlist
+                          ? "Retirer de la watchlist"
+                          : "Ajouter à la watchlist"}
+                      </button>
+                    </div>
+                  )}
+                </article>
+              );
+            })}
           </div>
 
           {/* PAGINATION */}
@@ -435,7 +565,8 @@ export function MoviesPage() {
                 padding: "0.4rem 0.75rem",
                 borderRadius: "0.5rem",
                 border: "1px solid rgba(148,163,184,0.7)",
-                background: page >= totalPages ? "rgba(15,23,42,0.6)" : "transparent",
+                background:
+                  page >= totalPages ? "rgba(15,23,42,0.6)" : "transparent",
                 color: page >= totalPages ? "#4b5563" : "#e5e7eb",
                 cursor: page >= totalPages ? "not-allowed" : "pointer"
               }}

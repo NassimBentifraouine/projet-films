@@ -7,4 +7,5 @@ export interface User {
   passwordHash: string;
   role: UserRole;
   createdAt: string;
+  watchlist: string[];
 }

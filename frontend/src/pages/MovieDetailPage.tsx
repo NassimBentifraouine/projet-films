@@ -35,6 +35,7 @@ export function MovieDetailPage() {
   const [savingRating, setSavingRating] = useState<boolean>(false);
   const [ratingMessage, setRatingMessage] = useState<string | null>(null);
 
+  // Charger le film
   useEffect(() => {
     const fetchMovie = async () => {
       if (!id) return;
@@ -61,6 +62,27 @@ export function MovieDetailPage() {
 
     fetchMovie();
   }, [apiBaseUrl, id]);
+
+  // Enregistrer la consultation dans l'historique
+  useEffect(() => {
+    const logView = async () => {
+      if (!id || !token) return;
+
+      try {
+        await fetch(`${apiBaseUrl}/movies/${id}/view`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        // Pas de message UI ici, c'est silencieux
+      } catch (err) {
+        console.error("Erreur lors de l'enregistrement de l'historique", err);
+      }
+    };
+
+    logView();
+  }, [apiBaseUrl, id, token]);
 
   const handleSubmitRating = async (event: FormEvent) => {
     event.preventDefault();
@@ -290,7 +312,9 @@ export function MovieDetailPage() {
               <p
                 style={{
                   fontSize: "0.9rem",
-                  color: ratingMessage.startsWith("Erreur") ? "#fecaca" : "#bbf7d0"
+                  color: ratingMessage.startsWith("Erreur")
+                    ? "#fecaca"
+                    : "#bbf7d0"
                 }}
               >
                 {ratingMessage}

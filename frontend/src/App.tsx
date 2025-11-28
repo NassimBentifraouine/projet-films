@@ -7,8 +7,31 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { useAuth } from "./context/AuthContext";
 
 function App() {
+  const { user, loading, logout } = useAuth();
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          margin: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#0f172a",
+          color: "#e5e7eb",
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        }}
+      >
+        <p>Chargement de la session utilisateur...</p>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -59,16 +82,63 @@ function App() {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "1rem",
+              gap: "1.5rem",
               fontSize: "0.95rem"
             }}
           >
-            <NavItem to="/">Accueil</NavItem>
-            <NavItem to="/movies">Catalogue</NavItem>
-            <NavItem to="/profile">Profil</NavItem>
-            <NavItem to="/admin">Admin</NavItem>
-            <NavItem to="/login">Connexion</NavItem>
-            <NavItem to="/register">Inscription</NavItem>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "1rem"
+              }}
+            >
+              <NavItem to="/">Accueil</NavItem>
+              <NavItem to="/movies">Catalogue</NavItem>
+              {user && <NavItem to="/profile">Profil</NavItem>}
+              {user?.role === "admin" && <NavItem to="/admin">Admin</NavItem>}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem"
+              }}
+            >
+              {user ? (
+                <>
+                  <span
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#9ca3af"
+                    }}
+                  >
+                    Bonjour, <strong>{user.name}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    style={{
+                      padding: "0.3rem 0.7rem",
+                      borderRadius: "0.5rem",
+                      border: "1px solid rgba(248,113,113,0.8)",
+                      background: "transparent",
+                      color: "#fecaca",
+                      cursor: "pointer",
+                      fontSize: "0.85rem"
+                    }}
+                  >
+                    Déconnexion
+                  </button>
+                </>
+              ) : (
+                <>
+                  <NavItem to="/login">Connexion</NavItem>
+                  <NavItem to="/register">Inscription</NavItem>
+                </>
+              )}
+            </div>
           </nav>
         </div>
       </header>
